@@ -1,0 +1,14 @@
+# sudo cp deploy/arc-analytics.service /etc/systemd/system/ && sudo systemctl enable --now arc-analytics
+[Unit]
+Description=ARC CRM Analytics (API + UI)
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/arc-crm-analytics
+ExecStart=/opt/arc-crm-analytics/deploy/start.sh
+Restart=always
+RestartSec=5
+User=arc
+
+[Install]
+WantedBy=multi-user.target

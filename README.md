@@ -37,3 +37,12 @@ Scope + as-of on every figure · period/target mismatch withholds the % · unsup
 - The Airgen ERP REST surface is **not** known to this scaffold — `erp/airgen.py` has placeholder paths. Everything else runs against the local stand-in today.
 - The predictive model is trained on 322 closed deals from a *pilot extract*. Two features that leaked the outcome were removed (see `predict.py`); remaining AUC may still be optimistic. Output is labelled directional and shows drivers, per BRD §14.
 - Agents are defined as prompts to paste into Airgen; nothing in this repo creates them automatically.
+
+## Deploy on a VM (single process: API + built UI on one port)
+```bash
+git clone git@github.com:<you>/arc-crm-analytics.git /opt/arc-crm-analytics && cd /opt/arc-crm-analytics
+cp .env.example .env   # ERP_MODE=airgen, AIRGEN_BASE_URL, AIRGEN_API_KEY, AIRGEN_APPEND_KEY, WRITE_API_KEY, ERP_WEBHOOK_TOKEN
+./deploy/start.sh      # needs python3.11+ and node 18+ on the VM; PORT=8000 by default
+# keep it alive: deploy/arc-analytics.service (systemd)
+```
+Open port 8000 (or put nginx/caddy with HTTPS in front). The public URL of this VM is the `ARC_API` the Airgen agents call, and `<ARC_API>/api/webhooks/erp-change?token=...` is the ERP webhook target.

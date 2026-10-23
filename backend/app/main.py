@@ -236,3 +236,10 @@ async def audit(request: Request):
 def audit_list(limit: int = 100):
     rows = get_state().erp.fetch("agent_action")
     return sorted(rows, key=lambda r: r.get("ts") or "", reverse=True)[:limit]
+
+
+# ------------------------------------------------------------------ serve the built frontend (single-process deploy)
+from fastapi.staticfiles import StaticFiles
+_dist = config.ROOT / "frontend" / "dist"
+if _dist.exists():
+    app.mount("/", StaticFiles(directory=_dist, html=True), name="ui")   # mounted last: /api/* routes win
