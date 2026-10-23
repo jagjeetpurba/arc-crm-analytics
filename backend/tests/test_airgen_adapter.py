@@ -91,3 +91,18 @@ def test_webhook_triggers_refresh(client):
         if s.version > v: break
         time.sleep(0.2)
     assert s.version > v
+
+
+def test_429_is_retried(erp, monkeypatch):
+    import time as _t
+    from app.erp import airgen
+    monkeypatch.setattr(airgen.config, "AIRGEN_MAX_RPM", 600)
+    monkeypatch.setattr(_t, "sleep", lambda *_: None)
+    calls = {"n": 0}
+    inner = erp.http._transport
+
+    def flaky(req):
+        calls["n"] += 1
+        return httpx.Response(429, json={"statusCode": 429}, headers={"retry-after": "1"}) if calls["n"] <= 2 else inner.handle_request(req)
+    erp.http = httpx.Client(transport=httpx.MockTransport(flaky))
+    assert erp.fetch("goals") == [] and calls["n"] == 3

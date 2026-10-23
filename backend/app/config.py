@@ -12,5 +12,7 @@ AIRGEN_API_KEY = os.getenv("AIRGEN_API_KEY", "")     # read-only key scoped to t
 AIRGEN_APPEND_KEY = os.getenv("AIRGEN_APPEND_KEY", "")  # role arc-backend-append: read+insert on crmAgentAction & crmOpportunitySnapshot ONLY
 AIRGEN_ADMIN_KEY = os.getenv("AIRGEN_ADMIN_KEY", "") # used only by /api/sync/* called by the healing agent
 AS_OF = os.getenv("AS_OF", "")                        # ISO date; default = latest date seen in data
-WATCH_INTERVAL_S = int(os.getenv("WATCH_INTERVAL_S", "15"))   # backend-side fallback poller; 0 disables
+WATCH_INTERVAL_S = int(os.getenv("WATCH_INTERVAL_S", "60" if os.getenv("ERP_MODE") == "airgen" else "15"))   # backend-side fallback poller; 0 disables
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+
+AIRGEN_MAX_RPM = int(os.getenv("AIRGEN_MAX_RPM", "60"))       # self-throttle; the ERP allows 100 requests / 60 s per workspace. 0 = off (tests)

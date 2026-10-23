@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Verify ERP host + key and the loaded row counts. Prompts for the key (hidden); never prints it.
 Usage: python scripts/check_erp.py https://<host>/rest"""
-import getpass, sys
+import getpass, sys, time
 import httpx
 
 base = (sys.argv[1] if len(sys.argv) > 1 else "https://erp.airgen.ai/rest").rstrip("/")
@@ -13,7 +13,12 @@ ok = True
 for coll, want in EXPECT.items():
     n, cur = 0, None
     while True:
-        r = httpx.get(f"{base}/{coll}", headers=H, params={"limit": 60, **({"startingAfter": cur} if cur else {})}, timeout=30)
+        for _ in range(6):
+            time.sleep(0.8)                              # stay under the ERP's 100 requests / 60 s limit
+            r = httpx.get(f"{base}/{coll}", headers=H, params={"limit": 60, **({"startingAfter": cur} if cur else {})}, timeout=30)
+            if r.status_code != 429:
+                break
+            print(f"  {coll}: rate limited, waiting 20 s ..."); time.sleep(20)
         if r.status_code != 200:
             print(f"{coll:18} HTTP {r.status_code} {r.text[:120]}"); ok = False; break
         b = r.json()

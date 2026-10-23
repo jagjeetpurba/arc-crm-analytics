@@ -10,7 +10,7 @@ Conventions confirmed by the Airgen Operator in Phase 1 (verify against /rest/op
 Everything uncertain is isolated in this file; tests run it against a fake Twenty server.
 """
 from __future__ import annotations
-import hashlib, json, re
+import hashlib, json, re, threading, time
 from datetime import datetime
 import httpx
 from .. import config
@@ -59,6 +59,24 @@ class AirgenERP(ERPClient):
         self.http = httpx.Client(headers={"Authorization": f"Bearer {config.AIRGEN_API_KEY}"}, timeout=30, transport=transport)
         self.schema: dict = {}
         self._ids: dict[str, dict[str, str]] = {}
+        self._gate = threading.Lock()
+        self._last = 0.0
+
+    def _req(self, method: str, url: str, **kw) -> httpx.Response:
+        """All ERP calls go through here: spaced to AIRGEN_MAX_RPM and retried on 429 (honours Retry-After)."""
+        for attempt in range(6):
+            if config.AIRGEN_MAX_RPM > 0:
+                with self._gate:
+                    wait = self._last + 60.0 / config.AIRGEN_MAX_RPM - time.monotonic()
+                    if wait > 0:
+                        time.sleep(wait)
+                    self._last = time.monotonic()
+            r = self.http.request(method, url, **kw)
+            if r.status_code != 429:
+                return r
+            ra = r.headers.get("retry-after")
+            time.sleep(min(float(ra) if ra and ra.replace(".", "").isdigit() else 12.0 * (attempt + 1), 65.0) if config.AIRGEN_MAX_RPM > 0 else 0)
+        return r
 
     def ensure_schema(self, schema: dict) -> None:
         self.schema = schema   # objects/fields are created in Airgen by the Operator, not by this service
@@ -106,7 +124,7 @@ class AirgenERP(ERPClient):
         plural, out, cursor = PLURAL[obj], [], None
         while True:
             params = {"limit": PAGE, **({CURSOR_PARAM: cursor} if cursor else {})}
-            r = self.http.get(f"{self.base}/{plural}", params=params, headers=self._auth(obj))
+            r = self._req("GET", f"{self.base}/{plural}", params=params, headers=self._auth(obj))
             r.raise_for_status()
             body = r.json()
             out += (body.get("data") or {}).get(plural, [])
@@ -146,11 +164,11 @@ class AirgenERP(ERPClient):
             else:
                 changed.append((cur["id"], body))
         for i in range(0, len(new), PAGE):
-            r = self.http.post(f"{self.base}/batch/{plural}", json=new[i:i + PAGE], headers=self._auth(obj))
+            r = self._req("POST", f"{self.base}/batch/{plural}", json=new[i:i + PAGE], headers=self._auth(obj))
             r.raise_for_status()
             st["inserted"] += len(new[i:i + PAGE])
         for rid, body in changed:
-            r = self.http.patch(f"{self.base}/{plural}/{rid}", json=body, headers=self._auth(obj))
+            r = self._req("PATCH", f"{self.base}/{plural}/{rid}", json=body, headers=self._auth(obj))
             r.raise_for_status()
             st["updated"] += 1
         return st
@@ -183,7 +201,7 @@ class AirgenERP(ERPClient):
             if not plural:
                 continue
             try:
-                r = self.http.get(f"{self.base}/{plural}/groupBy", params={"group_by": json.dumps([{camel(key): True}]),
+                r = self._req("GET", f"{self.base}/{plural}/groupBy", params={"group_by": json.dumps([{camel(key): True}]),
                                                                             "aggregate": json.dumps(["countNotEmptyId", "maxUpdatedAt"])})
                 r.raise_for_status()
                 body = r.json()

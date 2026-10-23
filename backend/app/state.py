@@ -42,18 +42,31 @@ class State:
         return True
 
     # ---- the sync / heal core ----
-    def drift(self) -> list[str]:
-        fresh = self.erp.change_token()
+    def _fingerprint(self, max_age=10.0) -> dict:
+        """ERP fingerprint, cached for a few seconds so status polls don't burn the ERP rate limit."""
+        now = time.monotonic()
+        if getattr(self, "_fp", None) is None or now - self._fp_at > max_age:
+            self._fp, self._fp_at = self.erp.change_token(), now
+        return self._fp
+
+    def drift(self, fresh: dict | None = None) -> list[str]:
+        fresh = fresh if fresh is not None else self._fingerprint(0)   # status checks must reflect the ERP right now
         return [o for o in set(fresh) | set(self.token) if fresh.get(o) != self.token.get(o)]
 
     def refresh(self, force=False, reason="") -> dict:
         with self.lock:
             spec_changed = self.reload_specs()
-            changed = self.drift()
+            self._fp = None                                   # always compare against a fresh fingerprint here
+            fresh = self._fingerprint(0)
+            changed = self.drift(fresh)
             if not (force or changed or spec_changed):
                 return {"changed": [], "version": self.version, "spec_changed": False}
-            self.token = self.erp.change_token()
-            self.data = {o: self.erp.fetch(o) for o in self.schema["objects"]}
+            self.token = fresh
+            # re-read only what changed (first load / forced = everything) to stay inside the ERP rate limit
+            todo = list(self.schema["objects"]) if (force or not self.data) else [o for o in changed if o in self.schema["objects"]]
+            for o in todo:
+                self.data[o] = self.erp.fetch(o)
+            self.data = {o: self.data.get(o, []) for o in self.schema["objects"]}
             dates = [d(r.get(f)) for r in self.data.get("opportunities", []) for f in ("created_on", "actual_close")]
             dates = [x for x in dates if x]
             self.as_of = date.fromisoformat(config.AS_OF) if config.AS_OF else (max(dates) if dates else date.today())

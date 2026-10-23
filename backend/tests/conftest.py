@@ -10,7 +10,7 @@ WORKBOOK = ROOT / "data" / "client_export.xlsx"
 _tmp = Path(tempfile.mkdtemp(prefix="arc-test-"))
 shutil.copytree(ROOT / "spec", _tmp / "spec")
 os.environ.update({"LOCAL_DB": str(_tmp / "erp.sqlite"), "SPEC_DIR": str(_tmp / "spec"),
-                   "WATCH_INTERVAL_S": "0", "AS_OF": "2026-09-22"})
+                   "WATCH_INTERVAL_S": "0", "AIRGEN_MAX_RPM": "0", "AS_OF": "2026-09-22"})
 
 
 @pytest.fixture(scope="session")
