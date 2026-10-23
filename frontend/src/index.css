@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Light theme only (BRD NFR-06). One accent (--accent-brand) is reserved for target / forecast figures. */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.984 0.003 247);
+  --foreground: oklch(0.208 0.042 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.208 0.042 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.208 0.042 265);
+  --primary: oklch(0.208 0.042 265);
+  --primary-foreground: oklch(0.984 0.003 247);
+  --secondary: oklch(0.968 0.007 247);
+  --secondary-foreground: oklch(0.208 0.042 265);
+  --muted: oklch(0.968 0.007 247);
+  --muted-foreground: oklch(0.554 0.046 257);
+  --accent: oklch(0.968 0.007 247);
+  --accent-foreground: oklch(0.208 0.042 265);
+  --destructive: oklch(0.577 0.245 27);
+  --border: oklch(0.929 0.013 255);
+  --input: oklch(0.929 0.013 255);
+  --ring: oklch(0.704 0.04 256);
+  --accent-brand: oklch(0.553 0.17 40);        /* ~ #c2410c */
+  --chart-1: oklch(0.446 0.043 257);
+  --chart-2: oklch(0.553 0.17 40);
+  --chart-3: oklch(0.712 0.03 257);
+  --chart-4: oklch(0.6 0.118 184);
+  --chart-5: oklch(0.769 0.188 70);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--accent-brand);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

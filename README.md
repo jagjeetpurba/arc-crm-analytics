@@ -1,11 +1,12 @@
 # ARC CRM Management Analytics
 
 Client workbook → **Airgen ERP** → governed KPIs + predictive indicators → **React dashboard** that follows the ERP live.
+Frontend: shadcn/ui (Radix) components are vendored in `frontend/src/components/ui/`; add more with `npx shadcn@latest add <component>`. Charts use shadcn's `chart` (Recharts).
 Implements the BRD (`ARC-CRM-Analytics-BRD.docx`) Phase 1 screens (Executive, Client Managers, Pipeline, CM360 Win/Loss, Exceptions) plus a Predictive page (BRD Phase 3 preview).
 
 | Where | What |
 |---|---|
-| **This repo (GitHub)** | `backend/` FastAPI (KPI engine, predictive, sync API) · `frontend/` React + ECharts · `spec/` YAML (ERP schema, KPIs, dashboard, rules) |
+| **This repo (GitHub)** | `backend/` FastAPI (KPI engine, predictive, sync API) · `frontend/` React + TypeScript + Tailwind + shadcn/ui (components in `frontend/src/components/ui/`) + Recharts · `spec/` YAML (ERP schema, KPIs, dashboard, rules) |
 | **Airgen** | the agents (`airgen/agents/*.md`: ingest, healing, assistant, spec-curator) and the ERP that holds the data (`airgen/erp_setup.md`) |
 
 See `docs/ARCHITECTURE.md` for the picture and the data flow.

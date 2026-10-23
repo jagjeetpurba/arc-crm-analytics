@@ -23,7 +23,7 @@ async def lifespan(_):
 
 app = FastAPI(title="ARC CRM Analytics API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
-RESERVED = {"key", "limit", "severity", "rule"}
+RESERVED = {"key", "limit", "severity", "rule", "group_by"}
 
 
 # ---- optional password gate (set DASH_USER + DASH_PASSWORD). Browsers get the standard login prompt;
