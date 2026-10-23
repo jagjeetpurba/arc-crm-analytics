@@ -1,0 +1,165 @@
+# ERP object model — single source of truth.
+# Used by: (1) backend LocalERP (dev), (2) the Airgen ingest agent to create/verify objects in the Airgen ERP,
+# (3) the loader to map client-workbook headers -> ERP fields.
+# Anything in the workbook that is NOT declared here (and not in ignore_headers) lands in the `extra`
+# bag of that object, is registered in field_registry, and appears on the dashboard automatically.
+version: 1
+currency: AED
+relations:     # create as lookups / foreign keys in the Airgen ERP (many -> one)
+  - {from: appointments.arc_type, to: activity_types.arc_type}
+  - {from: contacts.account_guid, to: accounts.guid, note: "mostly blank in pilot; never force-matched by name (DQ-06)"}
+  - {from: opportunity_snapshots.opportunity_guid, to: opportunities.guid}
+  # opportunities.client_manager / goals.goal_owner are text attributes until managers exist as ERP users (BRD A4)
+objects:
+  opportunities:
+    label: Opportunity
+    sheet: PILOT Opportunities
+    header_first_cell: Opportunity GUID
+    key: guid
+    cm_field: client_manager          # attribution field (BRD FR-06: never crm_owner)
+    columns:
+      guid:               {type: str,   source: "Opportunity GUID"}
+      arc_opportunity_id: {type: str,   source: "ARC Opportunity ID"}     # NOT unique (DQ-01)
+      account_display:    {type: str,   source: "Account (display only)"}
+      client_manager:     {type: str,   source: "Client Manager (display)"}
+      crm_owner:          {type: str,   source: "CRM Owner (display)"}
+      created_on:         {type: date,  source: "Created On"}
+      estimated_close:    {type: date,  source: "Estimated Close"}
+      actual_close:       {type: date,  source: "Actual Close"}
+      status_reason:      {type: str,   source: "Status Reason"}
+      stage:              {type: str,   source: "Opportunity Stage"}
+      forecast_category:  {type: str,   source: "Forecast Category"}
+      probability:        {type: float, source: "Probability (%)"}
+      est_gp:             {type: float, source: "Est. GP (AED)"}          # estimatedvalue IS GP
+      actual_gp:          {type: float, source: "Actual GP (AED)"}
+      est_revenue:        {type: float, source: "Est. Revenue (AED)"}
+      actual_revenue:     {type: float, source: "Actual Revenue (AED)"}   # supporting only
+      vertical:           {type: str,   source: "Account Vertical (from opp export)", trim: true}
+      lead_business_id:   {type: str,   source: "Lead Business ID (pilot only)"}
+    # workbook formula columns: recomputed by the engine, never trusted from the sheet (FR-13)
+    ignore_headers: ["Analytical Status","Eligible Forecast GP","Weighted Forecast GP","Observed Won GP",
+                     "Observed Won Revenue","Overdue?","Q3 Observed Won GP","Row QA","CM differs from Owner"]
+  goals:
+    label: Goal
+    sheet: PILOT Goals
+    header_first_cell: Goal GUID
+    key: guid
+    cm_field: goal_owner
+    columns:
+      guid:            {type: str,   source: "Goal GUID"}
+      goal_name:       {type: str,   source: "Goal Name"}
+      goal_owner:      {type: str,   source: "Goal Owner (display)"}
+      goal_metric:     {type: str,   source: "Goal Metric"}
+      fiscal_period:   {type: str,   source: "Fiscal Period"}
+      fiscal_year:     {type: str,   source: "Fiscal Year"}
+      goal_start:      {type: date,  source: "Goal Start"}
+      goal_end:        {type: date,  source: "Goal End"}
+      target_aed:      {type: float, source: "Target AED (parsed)"}
+      goal_actual_aed: {type: float, source: "Goal Actual AED (parsed)"}
+      in_progress_aed: {type: float, source: "Goal In-Progress AED"}
+      crm_pct_achieved: {type: float, source: "CRM % Achieved (as displayed)"}
+    ignore_headers: ["Goal Population","Goal QA"]
+  accounts:
+    label: Account
+    sheet: PILOT Accounts
+    header_first_cell: Account GUID
+    key: guid
+    cm_field: assigned_client_manager
+    columns:
+      guid:                    {type: str,  source: "Account GUID"}
+      name:                    {type: str,  source: "Account Name"}
+      assigned_client_manager: {type: str,  source: "Assigned Client Manager (display)"}
+      crm_owner:               {type: str,  source: "CRM Owner (display)"}
+      business_vertical:       {type: str,  source: "Business Vertical", trim: true}
+      arc_business_vertical:   {type: str,  source: "ARC Business Vertical"}
+      account_type:            {type: str,  source: "Account Type"}
+      account_status:          {type: str,  source: "Exported Account Status"}
+      created_on:              {type: date, source: "Created On"}
+    ignore_headers: ["Owner vs CM","Relationship QA"]
+  contacts:
+    label: Contact
+    sheet: PILOT Contacts
+    header_first_cell: Contact GUID
+    key: guid
+    columns:
+      guid:         {type: str,  source: "Contact GUID"}
+      company_name: {type: str,  source: "Company Name (display only)"}
+      created_on:   {type: date, source: "Created On"}
+      modified_on:  {type: date, source: "Modified On"}
+      status:       {type: str,  source: "Status"}
+      account_guid: {type: str,  source: "Account GUID"}
+    ignore_headers: ["Relationship QA"]
+  leads:
+    label: Lead
+    sheet: PILOT Leads
+    header_first_cell: Lead GUID
+    key: guid
+    cm_field: lead_owner
+    columns:
+      guid:         {type: str,   source: "Lead GUID"}
+      arc_lead_id:  {type: str,   source: "ARC Lead ID"}
+      company:      {type: str,   source: "Company (display only)"}
+      lead_owner:   {type: str,   source: "Lead Owner (display)"}
+      lead_source:  {type: str,   source: "Lead Source"}
+      primary_lob:  {type: str,   source: "Primary LOB (lead only)"}
+      sales_stage:  {type: str,   source: "Lead Sales Stage"}
+      rating:       {type: str,   source: "Lead Rating"}
+      budget_aed:   {type: float, source: "Customer Budget (AED)"}
+      created_on:   {type: date,  source: "Created On"}
+      modified_on:  {type: date,  source: "Modified On"}
+    ignore_headers: ["Exported Opportunity Business-ID Matches","Relationship QA"]
+  appointments:
+    label: Appointment
+    sheet: PILOT Appointments
+    header_first_cell: Appointment GUID
+    key: guid
+    cm_field: crm_owner
+    columns:
+      guid:        {type: str,   source: "Appointment GUID"}
+      crm_owner:   {type: str,   source: "CRM Owner (display)"}
+      arc_type:    {type: str,   source: "ARC Type"}
+      start_time:  {type: date,  source: "Start Time"}
+      end_time:    {type: date,  source: "End Time"}
+      duration_min: {type: float, source: "Actual Duration (min)"}
+      status:      {type: str,   source: "Status"}
+      regarding:   {type: str,   source: "Regarding (display only)"}
+      related_account: {type: str, source: "Related Account (display only)"}
+    ignore_headers: ["Completed Hours","Proposed Productivity Group","Row QA"]
+  activity_types:
+    label: Activity Type
+    sheet: PILOT Type Mapping
+    header_first_cell: ARC Type (exact)
+    key: arc_type
+    columns:
+      arc_type:       {type: str, source: "ARC Type (exact)"}
+      productivity_group: {type: str, source: "Proposed Productivity Group"}
+      approval_status: {type: str, source: "Approval Status"}
+    ignore_headers: ["Guidance"]
+  # ---- system / derived objects (no workbook sheet) ----
+  opportunity_snapshots:   # append-only (BRD 9.2 / Phase 3)
+    label: Opportunity Snapshot
+    key: snapshot_key
+    columns:
+      snapshot_key: {type: str}
+      snapshot_date: {type: date}
+      opportunity_guid: {type: str}
+      client_manager: {type: str}
+      stage: {type: str}
+      forecast_category: {type: str}
+      probability: {type: float}
+      est_gp: {type: float}
+      estimated_close: {type: date}
+  agent_action:            # audit log (NFR-09)
+    label: Agent Action
+    key: action_id
+    columns:
+      action_id: {type: str}
+      ts: {type: date}
+      agent: {type: str}
+      kind: {type: str}
+      target_object: {type: str}
+      target_key: {type: str}
+      before_json: {type: str}
+      after_json: {type: str}
+      outcome: {type: str}
+      prompt: {type: str}

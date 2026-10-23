@@ -1,0 +1,526 @@
+{
+  "objects": [
+    {
+      "name": "opportunities",
+      "label": "Opportunity",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Opportunity GUID"
+        },
+        {
+          "name": "arc_opportunity_id",
+          "type": "text",
+          "source_header": "ARC Opportunity ID"
+        },
+        {
+          "name": "account_display",
+          "type": "text",
+          "source_header": "Account (display only)"
+        },
+        {
+          "name": "client_manager",
+          "type": "text",
+          "source_header": "Client Manager (display)"
+        },
+        {
+          "name": "crm_owner",
+          "type": "text",
+          "source_header": "CRM Owner (display)"
+        },
+        {
+          "name": "created_on",
+          "type": "datetime",
+          "source_header": "Created On"
+        },
+        {
+          "name": "estimated_close",
+          "type": "datetime",
+          "source_header": "Estimated Close"
+        },
+        {
+          "name": "actual_close",
+          "type": "datetime",
+          "source_header": "Actual Close"
+        },
+        {
+          "name": "status_reason",
+          "type": "text",
+          "source_header": "Status Reason"
+        },
+        {
+          "name": "stage",
+          "type": "text",
+          "source_header": "Opportunity Stage"
+        },
+        {
+          "name": "forecast_category",
+          "type": "text",
+          "source_header": "Forecast Category"
+        },
+        {
+          "name": "probability",
+          "type": "decimal",
+          "source_header": "Probability (%)"
+        },
+        {
+          "name": "est_gp",
+          "type": "decimal",
+          "source_header": "Est. GP (AED)"
+        },
+        {
+          "name": "actual_gp",
+          "type": "decimal",
+          "source_header": "Actual GP (AED)"
+        },
+        {
+          "name": "est_revenue",
+          "type": "decimal",
+          "source_header": "Est. Revenue (AED)"
+        },
+        {
+          "name": "actual_revenue",
+          "type": "decimal",
+          "source_header": "Actual Revenue (AED)"
+        },
+        {
+          "name": "vertical",
+          "type": "text",
+          "source_header": "Account Vertical (from opp export)"
+        },
+        {
+          "name": "lead_business_id",
+          "type": "text",
+          "source_header": "Lead Business ID (pilot only)"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "goals",
+      "label": "Goal",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Goal GUID"
+        },
+        {
+          "name": "goal_name",
+          "type": "text",
+          "source_header": "Goal Name"
+        },
+        {
+          "name": "goal_owner",
+          "type": "text",
+          "source_header": "Goal Owner (display)"
+        },
+        {
+          "name": "goal_metric",
+          "type": "text",
+          "source_header": "Goal Metric"
+        },
+        {
+          "name": "fiscal_period",
+          "type": "text",
+          "source_header": "Fiscal Period"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "text",
+          "source_header": "Fiscal Year"
+        },
+        {
+          "name": "goal_start",
+          "type": "datetime",
+          "source_header": "Goal Start"
+        },
+        {
+          "name": "goal_end",
+          "type": "datetime",
+          "source_header": "Goal End"
+        },
+        {
+          "name": "target_aed",
+          "type": "decimal",
+          "source_header": "Target AED (parsed)"
+        },
+        {
+          "name": "goal_actual_aed",
+          "type": "decimal",
+          "source_header": "Goal Actual AED (parsed)"
+        },
+        {
+          "name": "in_progress_aed",
+          "type": "decimal",
+          "source_header": "Goal In-Progress AED"
+        },
+        {
+          "name": "crm_pct_achieved",
+          "type": "decimal",
+          "source_header": "CRM % Achieved (as displayed)"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "accounts",
+      "label": "Account",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Account GUID"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "source_header": "Account Name"
+        },
+        {
+          "name": "assigned_client_manager",
+          "type": "text",
+          "source_header": "Assigned Client Manager (display)"
+        },
+        {
+          "name": "crm_owner",
+          "type": "text",
+          "source_header": "CRM Owner (display)"
+        },
+        {
+          "name": "business_vertical",
+          "type": "text",
+          "source_header": "Business Vertical"
+        },
+        {
+          "name": "arc_business_vertical",
+          "type": "text",
+          "source_header": "ARC Business Vertical"
+        },
+        {
+          "name": "account_type",
+          "type": "text",
+          "source_header": "Account Type"
+        },
+        {
+          "name": "account_status",
+          "type": "text",
+          "source_header": "Exported Account Status"
+        },
+        {
+          "name": "created_on",
+          "type": "datetime",
+          "source_header": "Created On"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "contacts",
+      "label": "Contact",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Contact GUID"
+        },
+        {
+          "name": "company_name",
+          "type": "text",
+          "source_header": "Company Name (display only)"
+        },
+        {
+          "name": "created_on",
+          "type": "datetime",
+          "source_header": "Created On"
+        },
+        {
+          "name": "modified_on",
+          "type": "datetime",
+          "source_header": "Modified On"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "source_header": "Status"
+        },
+        {
+          "name": "account_guid",
+          "type": "text",
+          "source_header": "Account GUID"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "leads",
+      "label": "Lead",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Lead GUID"
+        },
+        {
+          "name": "arc_lead_id",
+          "type": "text",
+          "source_header": "ARC Lead ID"
+        },
+        {
+          "name": "company",
+          "type": "text",
+          "source_header": "Company (display only)"
+        },
+        {
+          "name": "lead_owner",
+          "type": "text",
+          "source_header": "Lead Owner (display)"
+        },
+        {
+          "name": "lead_source",
+          "type": "text",
+          "source_header": "Lead Source"
+        },
+        {
+          "name": "primary_lob",
+          "type": "text",
+          "source_header": "Primary LOB (lead only)"
+        },
+        {
+          "name": "sales_stage",
+          "type": "text",
+          "source_header": "Lead Sales Stage"
+        },
+        {
+          "name": "rating",
+          "type": "text",
+          "source_header": "Lead Rating"
+        },
+        {
+          "name": "budget_aed",
+          "type": "decimal",
+          "source_header": "Customer Budget (AED)"
+        },
+        {
+          "name": "created_on",
+          "type": "datetime",
+          "source_header": "Created On"
+        },
+        {
+          "name": "modified_on",
+          "type": "datetime",
+          "source_header": "Modified On"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "appointments",
+      "label": "Appointment",
+      "primary_key": "guid",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "text",
+          "source_header": "Appointment GUID"
+        },
+        {
+          "name": "crm_owner",
+          "type": "text",
+          "source_header": "CRM Owner (display)"
+        },
+        {
+          "name": "arc_type",
+          "type": "text",
+          "source_header": "ARC Type"
+        },
+        {
+          "name": "start_time",
+          "type": "datetime",
+          "source_header": "Start Time"
+        },
+        {
+          "name": "end_time",
+          "type": "datetime",
+          "source_header": "End Time"
+        },
+        {
+          "name": "duration_min",
+          "type": "decimal",
+          "source_header": "Actual Duration (min)"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "source_header": "Status"
+        },
+        {
+          "name": "regarding",
+          "type": "text",
+          "source_header": "Regarding (display only)"
+        },
+        {
+          "name": "related_account",
+          "type": "text",
+          "source_header": "Related Account (display only)"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "activity_types",
+      "label": "Activity Type",
+      "primary_key": "arc_type",
+      "fields": [
+        {
+          "name": "arc_type",
+          "type": "text",
+          "source_header": "ARC Type (exact)"
+        },
+        {
+          "name": "productivity_group",
+          "type": "text",
+          "source_header": "Proposed Productivity Group"
+        },
+        {
+          "name": "approval_status",
+          "type": "text",
+          "source_header": "Approval Status"
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "opportunity_snapshots",
+      "label": "Opportunity Snapshot",
+      "primary_key": "snapshot_key",
+      "fields": [
+        {
+          "name": "snapshot_key",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "snapshot_date",
+          "type": "datetime",
+          "source_header": null
+        },
+        {
+          "name": "opportunity_guid",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "client_manager",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "stage",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "forecast_category",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "probability",
+          "type": "decimal",
+          "source_header": null
+        },
+        {
+          "name": "est_gp",
+          "type": "decimal",
+          "source_header": null
+        },
+        {
+          "name": "estimated_close",
+          "type": "datetime",
+          "source_header": null
+        }
+      ],
+      "allow_dynamic_fields": true
+    },
+    {
+      "name": "agent_action",
+      "label": "Agent Action",
+      "primary_key": "action_id",
+      "fields": [
+        {
+          "name": "action_id",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "ts",
+          "type": "datetime",
+          "source_header": null
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "target_object",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "target_key",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "before_json",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "after_json",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "outcome",
+          "type": "text",
+          "source_header": null
+        },
+        {
+          "name": "prompt",
+          "type": "text",
+          "source_header": null
+        }
+      ],
+      "allow_dynamic_fields": true
+    }
+  ],
+  "relations": [
+    {
+      "from": "appointments.arc_type",
+      "to": "activity_types.arc_type"
+    },
+    {
+      "from": "contacts.account_guid",
+      "to": "accounts.guid",
+      "note": "mostly blank in pilot; never force-matched by name (DQ-06)"
+    },
+    {
+      "from": "opportunity_snapshots.opportunity_guid",
+      "to": "opportunities.guid"
+    }
+  ]
+}

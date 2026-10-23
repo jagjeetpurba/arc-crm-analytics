@@ -1,0 +1,103 @@
+# Governed KPI catalogue (BRD §8). One definition + one governing date per KPI.
+# Each KPI is a declarative query executed by backend/app/analytics/engine.py.
+# `where` ops: eq, ne, in, notnull, isnull, ci_eq (case-insensitive)
+kpis:
+  quarterly_gp_target:
+    id: FIN-01
+    label: GP target
+    format: aed
+    dataset: goals
+    agg: sum
+    field: target_aed
+    where: [{field: goal_metric, op: eq, value: "Actual GP"}]
+    date_field: goal_start
+    definition: Sum of approved goals whose metric is Actual GP.
+    exclusions: Pre-sales goals; other metrics.
+  achieved_gp:
+    id: FIN-02
+    label: Achieved GP
+    format: aed
+    dataset: opportunities
+    agg: sum
+    field: actual_gp
+    where: [{field: status_reason, op: ci_eq, value: WON}]
+    date_field: actual_close
+    definition: Sum of Actual GP on won opportunities.
+    exclusions: Non-won statuses. Estimated GP is never counted.
+  open_forecast_gp:
+    id: FIN-05
+    label: Open forecast GP
+    format: aed
+    dataset: opportunities
+    agg: sum
+    field: est_gp
+    where: [{field: status_reason, op: ci_eq, value: "IN PROGRESS"}]
+    date_field: estimated_close
+    definition: Sum of estimated GP for open (in-progress) opportunities.
+    exclusions: On hold, lost, won. Undated rows are counted separately (FR-11).
+  weighted_open_gp:
+    id: FIN-06
+    label: Weighted open GP
+    format: aed
+    dataset: opportunities
+    agg: sum
+    field: est_gp
+    weight_field: probability          # est_gp * probability / 100
+    where: [{field: status_reason, op: ci_eq, value: "IN PROGRESS"},
+            {field: estimated_close, op: notnull}, {field: probability, op: notnull}]
+    date_field: estimated_close
+    definition: Estimated GP x recorded probability / 100 across dated open records.
+    exclusions: Undated rows; blank probability (reported as completeness gap, never defaulted).
+  won_count:
+    id: OUT-01
+    label: Won deals
+    format: int
+    dataset: opportunities
+    agg: count
+    where: [{field: status_reason, op: ci_eq, value: WON}]
+    date_field: actual_close
+    definition: Count of won opportunities.
+  lost_count:
+    id: OUT-02
+    label: Lost deals
+    format: int
+    dataset: opportunities
+    agg: count
+    where: [{field: status_reason, op: ci_eq, value: LOST}]
+    date_field: actual_close
+    definition: Count of lost opportunities.
+  open_count:
+    label: Open deals
+    format: int
+    dataset: opportunities
+    agg: count
+    where: [{field: status_reason, op: ci_eq, value: "IN PROGRESS"}]
+    date_field: estimated_close
+    definition: Count of in-progress opportunities.
+  win_rate:
+    id: OUT-03
+    label: Win rate
+    format: pct
+    ratio: {num: won_count, den: [won_count, lost_count]}
+    definition: Won / (Won + Lost). Cancelled and disqualified treatment is an open ARC decision.
+  lost_gp_at_estimate:
+    id: OUT-04
+    label: Lost GP (at estimate)
+    format: aed
+    dataset: opportunities
+    agg: sum
+    field: est_gp
+    where: [{field: status_reason, op: ci_eq, value: LOST}]
+    date_field: actual_close
+    definition: Estimated GP of lost deals. Loss reason is not recorded in the extract.
+  avg_sales_cycle_days:
+    id: OUT-05
+    label: Avg sales cycle (days)
+    format: num
+    dataset: opportunities
+    agg: avg_days
+    field: actual_close
+    from_field: created_on
+    where: [{field: status_reason, op: ci_eq, value: WON}]
+    date_field: actual_close
+    definition: Mean days between created_on and actual_close on won deals.

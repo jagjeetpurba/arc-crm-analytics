@@ -1,0 +1,46 @@
+# Exception rules (BRD §7.5). Rule-based data-quality / decision signals — never scores of a person.
+# Thresholds are ARC-owned and editable; severity bands are days past the estimated close unless stated.
+overdue_open_deal:
+  id: EX-01
+  label: Open deal past estimated close
+  source_field: estimated_close
+  critical_days: 60
+  high_days: 30
+  monitor_days: 1
+open_without_close_date:
+  id: EX-02
+  label: Open deal without estimated close date
+  source_field: estimated_close
+  severity: High
+open_without_probability:
+  id: EX-03
+  label: Open deal with blank probability
+  source_field: probability
+  severity: Monitor
+open_without_gp:
+  id: EX-04
+  label: Open deal without estimated GP
+  source_field: est_gp
+  severity: High
+won_without_actual_gp:
+  id: EX-05
+  label: Won deal without actual GP
+  source_field: actual_gp
+  severity: Critical
+close_before_created:
+  id: EX-06
+  label: Estimated close earlier than created date
+  source_field: estimated_close
+  severity: Monitor
+duplicate_business_id:
+  id: EX-07
+  label: Business identifier shared by several records (GUID is the key)
+  source_field: arc_opportunity_id
+  severity: Monitor
+test_manager_record:
+  id: EX-08
+  label: Record attributed to a test/system manager
+  source_field: client_manager
+  severity: High
+# names (case-insensitive substrings) treated as test/system records — confirm with ARC Sales Ops (DQ-05)
+test_manager_patterns: ["test", "system", "admin", "integration", "do not use", "damcodev", "target #"]

@@ -1,0 +1,53 @@
+# Dashboard-as-code. The React renderer draws exactly what is here, plus whatever
+# /api/spec auto-generates for fields it discovers (see backend/app/analytics/specgen.py).
+# Widget `query` = KPI id (spec/kpis.yaml) + optional overrides (group_by, top, where, ...).
+# Widget types: kpi_strip | bar | line | table | exceptions | predict_drivers | predict_forecast | predict_deals
+version: 1
+title: ARC CRM Management Analytics
+global_filters: [period, client_manager, vertical]       # dynamic dimensions are appended automatically
+pages:
+  - id: executive
+    title: Executive
+    question: Are we hitting the GP target, and is the forecast credible?
+    widgets:
+      - {id: exec_kpis, type: kpi_strip, width: 12, kpis: [quarterly_gp_target, achieved_gp, open_forecast_gp, weighted_open_gp]}
+      - {id: exec_close_month, type: bar, title: Achieved GP by actual-close month, width: 6,
+         query: {kpi: achieved_gp, group_by: "actual_close:month", order: key}}
+      - {id: exec_stage, type: bar, title: Open forecast GP by stage, width: 6,
+         query: {kpi: open_forecast_gp, group_by: stage, order: value}}
+  - id: managers
+    title: Client Managers
+    question: Which client manager is behind and why?
+    widgets:
+      - {id: cm_won, type: bar, title: Achieved GP by client manager, width: 6, query: {kpi: achieved_gp, group_by: client_manager, order: value, top: 15}}
+      - {id: cm_open, type: bar, title: Open forecast GP by client manager, width: 6, query: {kpi: open_forecast_gp, group_by: client_manager, order: value, top: 15}}
+      - {id: cm_table, type: table, title: Client manager scorecard, width: 12, table: cm_scorecard}
+  - id: pipeline
+    title: Pipeline health
+    question: What is genuinely in the pipeline, and when does it close?
+    widgets:
+      - {id: pipe_kpis, type: kpi_strip, width: 12, kpis: [open_count, open_forecast_gp, weighted_open_gp]}
+      - {id: pipe_month, type: bar, title: Open GP by expected close month, width: 6, query: {kpi: open_forecast_gp, group_by: "estimated_close:month", order: key}}
+      - {id: pipe_cat, type: bar, title: Open GP by forecast category, width: 6, query: {kpi: open_forecast_gp, group_by: forecast_category, order: value}}
+      - {id: pipe_completeness, type: table, title: Completeness gaps (disclosed, never defaulted), width: 12, table: pipeline_completeness}
+  - id: cm360
+    title: CM360 · Win/Loss
+    question: How does this manager win and lose?
+    widgets:
+      - {id: wl_kpis, type: kpi_strip, width: 12, kpis: [win_rate, won_count, lost_count, achieved_gp, lost_gp_at_estimate, avg_sales_cycle_days]}
+      - {id: wl_by_vertical, type: bar, title: Won GP by vertical, width: 6, query: {kpi: achieved_gp, group_by: vertical, order: value}}
+      - {id: wl_lost_vertical, type: bar, title: Lost GP at estimate by vertical, width: 6, query: {kpi: lost_gp_at_estimate, group_by: vertical, order: value}}
+      - {id: wl_deals, type: table, title: Deals (won and lost), width: 12, table: closed_deals}
+  - id: exceptions
+    title: Exceptions
+    question: What needs a decision this week?
+    widgets:
+      - {id: exc, type: exceptions, width: 12}
+  - id: predictive
+    title: Predictive
+    question: Which open deals are likely to close, and what will the quarter land at?
+    note: Model-assisted indicators (BRD Phase 3). Drivers shown for every indicator; trained on a small pilot extract, so treat as directional.
+    widgets:
+      - {id: pr_forecast, type: predict_forecast, title: Expected GP by close month, width: 7}
+      - {id: pr_drivers, type: predict_drivers, title: What drives win probability, width: 5}
+      - {id: pr_deals, type: predict_deals, title: Open deals ranked by expected GP, width: 12}
