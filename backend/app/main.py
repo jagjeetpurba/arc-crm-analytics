@@ -26,6 +26,33 @@ app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_meth
 RESERVED = {"key", "limit", "severity", "rule"}
 
 
+# ---- optional password gate (set DASH_USER + DASH_PASSWORD). Browsers get the standard login prompt;
+# agents/other services may send X-API-Key: <WRITE_API_KEY> instead. Health and the ERP webhook stay open
+# (the webhook has its own ?token=).
+import base64, os, secrets as _secrets
+from starlette.responses import Response
+
+
+@app.middleware("http")
+async def password_gate(request: Request, call_next):
+    user, pw = os.getenv("DASH_USER"), os.getenv("DASH_PASSWORD")
+    open_paths = ("/api/health", "/api/webhooks/erp-change")
+    if not (user and pw) or request.url.path in open_paths or request.method == "OPTIONS":
+        return await call_next(request)
+    key = os.getenv("WRITE_API_KEY")
+    if key and _secrets.compare_digest(request.headers.get("x-api-key", ""), key):
+        return await call_next(request)
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("basic "):
+        try:
+            u, _, p = base64.b64decode(auth[6:]).decode().partition(":")
+            if _secrets.compare_digest(u, user) and _secrets.compare_digest(p, pw):
+                return await call_next(request)
+        except Exception:
+            pass
+    return Response("Login required", status_code=401, headers={"WWW-Authenticate": 'Basic realm="ARC Analytics"'})
+
+
 def write_auth(x_api_key: str | None = Header(default=None)):
     import os
     need = os.getenv("WRITE_API_KEY")
