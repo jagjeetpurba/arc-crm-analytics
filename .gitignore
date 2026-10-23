@@ -7,3 +7,4 @@ __pycache__/
 data/*.xlsx
 data/*.sqlite
 .pytest_cache/
+.DS_Store
