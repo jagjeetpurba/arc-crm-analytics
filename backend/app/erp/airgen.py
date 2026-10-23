@@ -17,7 +17,6 @@ from .. import config
 from .base import ERPClient, Row
 
 PAGE = 60
-CURSOR_PARAM = "startingAfter"      # Twenty versions differ (startingAfter | starting_after); flip here if the ERP rejects it
 SYSTEM_FIELDS = {"id", "createdAt", "updatedAt", "deletedAt", "createdBy", "position", "name", "searchVector"}
 PLURAL = {  # our object -> REST collection
     "opportunities": "crmOpportunities", "goals": "crmGoals", "accounts": "crmAccounts", "contacts": "crmContacts",
@@ -121,17 +120,28 @@ class AirgenERP(ERPClient):
 
     # -- reads ----------------------------------------------------------
     def _list_raw(self, obj) -> list[dict]:
-        plural, out, cursor = PLURAL[obj], [], None
-        while True:
-            params = {"limit": PAGE, **({CURSOR_PARAM: cursor} if cursor else {})}
+        """Cursor paging with guards: stops at totalCount, and raises if the ERP keeps returning the same page
+        (which means the cursor parameter name is being ignored) instead of looping forever."""
+        plural, out, cursor, seen = PLURAL[obj], [], None, set()
+        for _ in range(500):
+            params = {"limit": PAGE}
+            if cursor:
+                params.update({"starting_after": cursor, "startingAfter": cursor})   # Twenty uses starting_after; send both spellings
             r = self._req("GET", f"{self.base}/{plural}", params=params, headers=self._auth(obj))
             r.raise_for_status()
             body = r.json()
-            out += (body.get("data") or {}).get(plural, [])
+            page = (body.get("data") or {}).get(plural, [])
+            ids = [x.get("id") for x in page]
+            if page and all(i in seen for i in ids):
+                raise RuntimeError(f"ERP paging for {plural} is not advancing (same page returned twice): the cursor parameter is being ignored")
+            seen.update(ids)
+            out += page
             pi = body.get("pageInfo") or {}
-            if not pi.get("hasNextPage"):
+            total = body.get("totalCount")
+            if not page or not pi.get("hasNextPage") or (total is not None and len(out) >= total):
                 return out
             cursor = pi.get("endCursor")
+        raise RuntimeError(f"ERP paging for {plural} exceeded 500 pages")
 
     def fetch(self, obj: str) -> list[Row]:
         raw = self._list_raw(obj)

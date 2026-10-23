@@ -35,7 +35,7 @@ class FakeTwenty:
         m = re.fullmatch(r"/(\w+)", path)
         if m and req.method == "GET":
             recs = sorted(self.store.get(m[1], {}).values(), key=lambda r: r["id"])
-            limit, cur = int(q.get("limit", 60)), q.get("startingAfter")
+            limit, cur = int(q.get("limit", 60)), q.get("starting_after")
             start = next((i + 1 for i, r in enumerate(recs) if r["id"] == cur), 0) if cur else 0
             page = recs[start:start + limit]
             more = start + limit < len(recs)
@@ -106,3 +106,13 @@ def test_429_is_retried(erp, monkeypatch):
         return httpx.Response(429, json={"statusCode": 429}, headers={"retry-after": "1"}) if calls["n"] <= 2 else inner.handle_request(req)
     erp.http = httpx.Client(transport=httpx.MockTransport(flaky))
     assert erp.fetch("goals") == [] and calls["n"] == 3
+
+
+def test_paging_guard_raises_instead_of_looping(erp):
+    """An ERP that ignores the cursor returns page 1 forever; the adapter must fail loudly."""
+    page = [{"id": f"id{i}", "guid": f"g{i}"} for i in range(3)]
+    def stuck(req):
+        return httpx.Response(200, json={"data": {"crmGoals": page}, "pageInfo": {"hasNextPage": True, "endCursor": "id2"}, "totalCount": 99})
+    erp.http = httpx.Client(transport=httpx.MockTransport(stuck))
+    with pytest.raises(RuntimeError, match="not advancing"):
+        erp.fetch("goals")
