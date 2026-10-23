@@ -5,7 +5,11 @@ import getpass, sys, time
 import httpx
 
 base = (sys.argv[1] if len(sys.argv) > 1 else "https://erp.airgen.ai/rest").rstrip("/")
-key = getpass.getpass("ERP API key (hidden): ").strip()
+import os
+key = (os.environ.get("ERP_KEY") or getpass.getpass("ERP API key (paste, press Enter; nothing will show): ")).strip()
+if len(key) < 40:
+    sys.exit(f"Key looks too short ({len(key)} chars) - paste the full token.")
+print(f"Key received ({len(key)} chars). Checking {base} ...", flush=True)
 H = {"Authorization": "Bearer " + key}
 EXPECT = {"crmOpportunities": 563, "crmGoals": 28, "crmAccounts": 62, "crmContacts": 62, "crmLeads": 55,
           "crmAppointments": 71, "crmActivityTypes": 12}
@@ -14,8 +18,9 @@ for coll, want in EXPECT.items():
     n, cur = 0, None
     while True:
         for _ in range(6):
+            print(f"  {coll}: requesting page ...", flush=True)
             time.sleep(0.8)                              # stay under the ERP's 100 requests / 60 s limit
-            r = httpx.get(f"{base}/{coll}", headers=H, params={"limit": 60, **({"startingAfter": cur} if cur else {})}, timeout=30)
+            r = httpx.get(f"{base}/{coll}", headers=H, params={"limit": 60, **({"startingAfter": cur} if cur else {})}, timeout=20)
             if r.status_code != 429:
                 break
             print(f"  {coll}: rate limited, waiting 20 s ..."); time.sleep(20)
