@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+"""Verify ERP host + key and the loaded row counts. Prompts for the key (hidden); never prints it.
+Usage: python scripts/check_erp.py https://<host>/rest"""
+import getpass, sys
+import httpx
+
+base = (sys.argv[1] if len(sys.argv) > 1 else "https://erp.airgen.ai/rest").rstrip("/")
+key = getpass.getpass("ERP API key (hidden): ").strip()
+H = {"Authorization": "Bearer " + key}
+EXPECT = {"crmOpportunities": 563, "crmGoals": 28, "crmAccounts": 62, "crmContacts": 62, "crmLeads": 55,
+          "crmAppointments": 71, "crmActivityTypes": 12}
+ok = True
+for coll, want in EXPECT.items():
+    n, cur = 0, None
+    while True:
+        r = httpx.get(f"{base}/{coll}", headers=H, params={"limit": 60, **({"startingAfter": cur} if cur else {})}, timeout=30)
+        if r.status_code != 200:
+            print(f"{coll:18} HTTP {r.status_code} {r.text[:120]}"); ok = False; break
+        b = r.json()
+        n += len((b.get("data") or {}).get(coll, []))
+        pi = b.get("pageInfo") or {}
+        if not pi.get("hasNextPage"):
+            tot = b.get("totalCount")
+            flag = "OK " if n == want else "MISMATCH"
+            ok &= n == want
+            print(f"{coll:18} fetched={n:4} expected={want:4} totalCount={tot} {flag}")
+            break
+        cur = pi.get("endCursor")
+print("ALL GOOD" if ok else "CHECK ABOVE")
