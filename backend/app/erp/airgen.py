@@ -42,10 +42,14 @@ class AirgenERP(ERPClient):
 
     def change_token(self) -> dict[str, dict]:
         out = {}
-        for obj in self.schema.get("objects", {}):
+        for obj, o in self.schema.get("objects", {}).items():
             r = self.http.get(f"/objects/{obj}/fingerprint")                                         # TODO
             if r.status_code == 200:
                 out[obj] = r.json()
+            else:   # no fingerprint endpoint: hash the records (fine for thousands of rows; keeps drift detection working)
+                import hashlib, json
+                rows = sorted(self.fetch(obj), key=lambda x: str(x.get(o["key"])))
+                out[obj] = {"count": len(rows), "checksum": hashlib.sha1(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()[:16]}
         return out
 
     def dynamic_fields(self) -> list[dict]:

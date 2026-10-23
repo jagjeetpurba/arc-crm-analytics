@@ -133,6 +133,24 @@ def drill(kpi: str, request: Request, key: str | None = None, group_by: str | No
     return {"columns": list(rows[0].keys()) if rows else [], "rows": rows, "total": res["total"], "scope": res["scope"]}
 
 
+@app.get("/api/records/{obj}")
+def records(obj: str, request: Request, q: str | None = None, limit: int = 50):
+    """Read-only record lookup for the assistant agent. Any other query param = exact (trimmed, case-insensitive) match on that field.
+    `q` = substring match across text fields. Always reads the live governed data (never a stale cache of a chat)."""
+    s = get_state()
+    if obj not in s.data or obj == "agent_action":
+        raise HTTPException(404, f"unknown object {obj}")
+    eq = {k: v for k, v in request.query_params.items() if k not in ("q", "limit")}
+    rows = s.data[obj]
+    for k, v in eq.items():
+        rows = [r for r in rows if str(r.get(k, "")).strip().lower() == v.strip().lower()]
+    if q:
+        ql = q.lower()
+        rows = [r for r in rows if any(ql in str(x).lower() for x in r.values() if isinstance(x, str))]
+    return {"object": obj, "total": len(rows), "rows": rows[:min(limit, 200)],
+            "scope": {"as_of": s.as_of.isoformat(), "data_version": s.version, "last_sync_at": s.last_sync_at, "filters_applied": eq | ({"q": q} if q else {})}}
+
+
 # ------------------------------------------------------------------ sync / healing-agent API
 @app.get("/api/sync/status")
 def sync_status():
