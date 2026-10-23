@@ -159,6 +159,18 @@ def sync_status():
             "as_of": s.as_of.isoformat(), "recent_events": s.events[-10:]}
 
 
+@app.post("/api/webhooks/erp-change")
+async def erp_change_webhook(request: Request, token: str | None = None):
+    """Register this URL as the Airgen ERP webhook target (record created/updated/deleted on the 9 crm* objects).
+    Optional shared secret: ?token=<ERP_WEBHOOK_TOKEN>. Refresh runs in the background so the ERP gets a fast 200."""
+    import os, threading
+    need = os.getenv("ERP_WEBHOOK_TOKEN")
+    if need and token != need:
+        raise HTTPException(401, "bad webhook token")
+    threading.Thread(target=lambda: get_state().refresh(reason="erp-webhook"), daemon=True).start()
+    return {"accepted": True}
+
+
 @app.post("/api/sync/heal", dependencies=[Depends(write_auth)])
 def heal(reason: str = "healing-agent"):
     """Called by the Airgen healing agent when it detects ERP != screen. Idempotent."""
